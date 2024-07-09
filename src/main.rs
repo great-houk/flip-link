@@ -27,10 +27,10 @@ fn notmain() -> Result<i32> {
     env_logger::init();
 
     // NOTE `skip` the name/path of the binary (first argument)
-    let args = env::args().skip(1).collect::<Vec<_>>();
+    let args_short = env::args().skip(1).collect::<Vec<_>>();
 
     {
-        let exit_status = linking::link_normally(&args)?;
+        let exit_status = linking::link_normally(&args_short)?;
         if !exit_status.success() {
             eprintln!(
                 "\nflip-link: the native linker failed to link the program normally; \
@@ -41,6 +41,7 @@ fn notmain() -> Result<i32> {
         // if linking succeeds then linker scripts are well-formed; we'll rely on that in the parser
     }
 
+    let args = argument_parser::load_args_from_path(&args_short);
     let current_dir = env::current_dir()?;
     let linker_scripts = get_linker_scripts(&args, &current_dir)?;
 
@@ -99,7 +100,7 @@ fn notmain() -> Result<i32> {
         }
         new_linker_script.flush()?;
 
-        let exit_status = linking::link_modified(&args, &current_dir, tempdir, new_origin)?;
+        let exit_status = linking::link_modified(&args_short, &current_dir, tempdir, new_origin)?;
         Ok(exit_status)
     })?;
 
